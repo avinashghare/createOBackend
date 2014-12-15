@@ -166,8 +166,8 @@ class field_model extends CI_Model
 	public function getisprimarydropdown()
 	{
 		$isprimary= array(
-			 "yes" => "Yes",
-			 "no" => "No",
+			 "TRUE" => "Yes",
+			 "FALSE" => "No",
 			);
 		return $isprimary;
 	}
@@ -175,8 +175,8 @@ class field_model extends CI_Model
 	public function getisnulldropdown()
 	{
 		$isnull= array(
-			 "yes" => "Yes",
-			 "no" => "No",
+			 "TRUE" => "Yes",
+			 "FALSE" => "No",
 			);
 		return $isnull;
 	}
@@ -184,8 +184,8 @@ class field_model extends CI_Model
 	public function getautoincrementdropdown()
 	{
 		$autoincrement= array(
-			 "yes" => "Yes",
-			 "no" => "No",
+			 "TRUE" => "Yes",
+			 "FALSE" => "No",
 			);
 		return $autoincrement;
 	}

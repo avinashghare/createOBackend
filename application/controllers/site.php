@@ -1780,16 +1780,18 @@ class Site extends CI_Controller
     
 	function executeproject()
 	{
+        
+        
 		$access = array("1");
 		$this->checkaccess($access);
         $id=$this->input->get('id');
-        $this->load->dbforge();
+        
         $project=$this->db->query("SELECT * FROM `project` WHERE `id`='$id'")->row();
         $databasename=$project->name;
-        if ($this->dbforge->create_database($databasename))
-        {
-            echo 'Database created!';
-        }
+        $this->load->dbforge();
+        
+        
+        
         
         $tablenames=$this->db->query("SELECT * FROM `table` WHERE `project`='$id'")->result();
 //        print_r($tablenames);
@@ -1805,40 +1807,550 @@ LEFT OUTER JOIN `sqltype` ON `field`.`sqltype`=`sqltype`.`id`
 LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`table`='$tableid'")->result();
 //            print_r($allfields);
             $fields=array();
-            $fields1=array();
-            $this->dbforge->add_field('id');
+//            $fields1=array();
+//            $this->dbforge->add_field('id');
            foreach($allfields as $fieldrow)
             {
                         $id=$fieldrow->id;
                         $sqlname=$fieldrow->sqlname;
-                        $type=$fieldrow->fieldtypename;
+                        $type=$fieldrow->sqltypename;
                         $isprimary=$fieldrow->isprimary;
+                        $autoincrement=$fieldrow->autoincrement;
                         
-                        $fields1 = array(
-                                $sqlname => array(
-                                                         'type' => $type,
-                                                         'constraint' => 5, 
-                                                         'unsigned' => TRUE
-                                                  ),
-                            
-                        );
-               if($isprimary=='TRUE')
-                            {   
-                                $this->dbforge->add_key($sqlname, TRUE);
-                            }
-               print_r($fields1);
-               echo "<br>";
-                   $fields[]=array_push($fields, $fields1);
-               
-               print_r($fields);
-               echo "<br>";
+                        $fields[$sqlname]= array('type' => $type);
+                
+//                        $fields[$sqlname]= array();
+                        $fields[$sqlname]["type"]= $type;
+                        if($type=='int')
+                        {     
+                            $fields[$sqlname]["constraint"]= 11;
+                        }
+                        else if($type=='varchar')
+                        {
+                            $fields[$sqlname]["constraint"]= 255;
+                        }
+                        if($isprimary=='TRUE')
+                        {
+                            $this->dbforge->add_key($sqlname, TRUE);
+                        }
+                        if($autoincrement=='TRUE')
+                        {
+                            $fields[$sqlname]["auto_increment"]= TRUE;
+                        }
              }
             print_r($fields);
+            
+            
+           
             $this->dbforge->add_field($fields);
-            $this->dbforge->create_table($tablename);
+            $this->dbforge->create_table($databasename."_".$tablename);
+            
+           
         
         }
+    
+        // for git only    
+        //echo shell_exec("git clone https://github.com/avinashghare/createO.git");
+        //echo shell_exec("mv createO $databasename");
+        //echo shell_exec("mv $databasename admins");
         
+        
+            
 	}
+    
+	function executeproject1()
+	{
+        
+        
+		$access = array("1");
+		$this->checkaccess($access);
+        $id=$this->input->get('id');
+        
+        $project=$this->db->query("SELECT * FROM `project` WHERE `id`='$id'")->row();
+        $databasename=$project->name;
+        $this->load->dbforge();
+        
+        
+        
+        
+        $tablenames=$this->db->query("SELECT * FROM `table` WHERE `project`='$id'")->result();
+//        print_r($tablenames);
+        $alljson="";
+        $alljson.='<?php if ( ! defined("BASEPATH")) exit("No direct script access allowed");
+class Json extends CI_Controller 
+{';
+        
+    
+        foreach ($tablenames as $rowtable)
+        {
+//            echo $rowtable->id;
+            $tableid=$rowtable->id;
+            $tablename=$rowtable->tablename;
+        $allfields=$this->db->query("SELECT `field`.`id`, `field`.`table`, `field`.`sqlname`, `field`.`sqltype`, `field`.`isprimary`, `field`.`defaultvalue`, `field`.`isnull`, `field`.`autoincrement`, `field`.`title`, `field`.`type`, `field`.`placeholder`, `field`.`showinview`,`sqltype`.`name` AS `sqltypename`,`fieldtype`.`name` AS `fieldtypename`,`table`.`tablename` AS `tablename`
+FROM `field`
+LEFT OUTER JOIN `table` ON `field`.`table`=`table`.`id`
+LEFT OUTER JOIN `sqltype` ON `field`.`sqltype`=`sqltype`.`id`
+LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`table`='$tableid'")->result();
+            
+            //for viewtable
+//            echo "public function view".$tablename."()\n";
+//            echo "{\n";
+//            echo '$access=array("1");'."\n";
+//            echo '$this->checkaccess($access);'."\n";
+//            echo '$data["page"]="view'.$tablename.'";'."\n";
+//            echo '$data["base_url"]=site_url("site/view'.$tablename.'json");'."\n";
+//            echo '$data["title"]="View '.$tablename.'";'."\n";
+//            echo '$this->load->view("template",$data);'."\n";
+//            echo "}\n";
+            
+            $controller="";
+            $controller.="public function view".$tablename."()\n";
+            $controller.="{\n";
+            $controller.='$access=array("1");'."\n";
+//            echo $controller;
+            $controller.='$this->checkaccess($access);'."\n";
+            $controller.='$data["page"]="view'.$tablename.'";'."\n";
+            $controller.='$data["base_url"]=site_url("site/view'.$tablename.'json");'."\n";
+            $controller.='$data["title"]="View '.$tablename.'";'."\n";
+            $controller.='$this->load->view("template",$data);'."\n";
+            $controller.="}\n";
+            
+            
+            $controller.='function view'.$tablename.'json()'."\n";
+            $controller.="{\n";
+            $j=0;
+            foreach($allfields as $fieldrow)
+            {
+                        $id=$fieldrow->id;
+                        $sqlname=$fieldrow->sqlname;
+                        $title=$fieldrow->title;
+                        $type=$fieldrow->sqltypename;
+                        $isprimary=$fieldrow->isprimary;
+                        $autoincrement=$fieldrow->autoincrement;
+                $controller.='$elements=array();'."\n";
+                $controller.='$elements['.$j.']=new stdClass();'."\n";
+                $controller.='$elements['.$j.']->field="`'.$databasename."_".$tablename.'`.`'.$sqlname.'`";'."\n";
+                $controller.='$elements['.$j.']->sort="1";'."\n";
+                $controller.='$elements['.$j.']->header="'.$title.'";'."\n";
+                $controller.='$elements['.$j.']->alias="'.$sqlname.'";'."\n";
+                
+               $j++;
+             }
+            
+            $controller.='$search=$this->input->get_post("search");'."\n";
+            $controller.='$pageno=$this->input->get_post("pageno");'."\n";
+            $controller.='$orderby=$this->input->get_post("orderby");'."\n";
+            $controller.='$orderorder=$this->input->get_post("orderorder");'."\n";
+            $controller.='$maxrow=$this->input->get_post("maxrow");'."\n";
+            
+            $controller.='if($maxrow=="")'."\n";
+            $controller.='{'."\n";
+            $controller.='$maxrow=20;'."\n";
+            $controller.='}'."\n";
+            $controller.='if($orderby=="")'."\n";
+            $controller.='{'."\n";
+            $controller.='$orderby="id";'."\n";
+            $controller.='$orderorder="ASC";'."\n";
+            $controller.='}'."\n";
+            
+            $controller.= '$data["message"]=$this->chintantable->query($pageno,$maxrow,$orderby,$orderorder,$search,$elements,"FROM `'.$databasename."_".$tablename.'`");'."\n";
+            
+            $controller.='$this->load->view("json",$data);'."\n";
+            $controller.= "}\n\n";
+         
+//            echo $controller;
+            //create 
+            
+            $controller.='public function create'.$tablename.''."\n";
+            $controller.='{'."\n";
+            $controller.='$access=array("1");'."\n";
+            $controller.='$this->checkaccess($access);'."\n";
+            $controller.='$data["page"]="create'.$tablename.'";'."\n";
+            $controller.='$data["title"]="Create '.$tablename.'";'."\n";
+            $controller.='$this->load->view("template",$data);'."\n";
+            $controller.='}'."\n";
+            
+            //createsubmit
+            
+            $controller.='public function create'.$tablename.'submit'."\n";
+            $controller.='{'."\n";
+            $controller.='$access=array("1");'."\n";
+            $controller.='$this->checkaccess($access);'."\n";
+            
+            foreach($allfields as $fieldrow)
+            {
+                        $id=$fieldrow->id;
+                        $sqlname=$fieldrow->sqlname;
+                        $title=$fieldrow->title;
+                        $type=$fieldrow->sqltypename;
+                        $isprimary=$fieldrow->isprimary;
+                        $autoincrement=$fieldrow->autoincrement;
+                $controller.='$this->form_validation->set_rules("'.$sqlname.'","'.$title.'","trim");'."\n";
+                
+             }
+            $controller.='if($this->form_validation->run()==FALSE)'."\n";
+            $controller.='{'."\n";
+                $controller.='$data["alerterror"]=validation_errors();'."\n";
+                $controller.='$data["page"]="create'.$tablename.'";'."\n";
+                $controller.='$data["title"]="Create '.$tablename.'";'."\n";
+                $controller.='$this->load->view("template",$data);'."\n";
+            $controller.='}'."\n";
+            $controller.='else'."\n";
+            $controller.='{'."\n";
+                foreach($allfields as $fieldrow)
+                {
+                            $id=$fieldrow->id;
+                            $sqlname=$fieldrow->sqlname;
+                            $title=$fieldrow->title;
+                            $type=$fieldrow->sqltypename;
+                            $isprimary=$fieldrow->isprimary;
+                            $autoincrement=$fieldrow->autoincrement;
+                    $controller.='$'.$sqlname.'=$this->input->get_post("'.$sqlname.'");'."\n";
+
+                 }
+                $controller.='if($this->'.$tablename.'_model->create(';
+            $string="";
+                foreach($allfields as $fieldrow)
+                {
+                            $id=$fieldrow->id;
+                            $sqlname=$fieldrow->sqlname;
+                            $title=$fieldrow->title;
+                            $type=$fieldrow->sqltypename;
+                            $isprimary=$fieldrow->isprimary;
+                            $autoincrement=$fieldrow->autoincrement;
+//                    if(end($allfields))
+                    $string=$string.'$'.$sqlname.',';
+
+                 }
+                $controller.=rtrim($string, ",");
+                $controller.=')==0)'."\n";
+                
+                $controller.='$data["alerterror"]="New '.$tablename.' could not be created.";'."\n";
+                $controller.='else'."\n";
+                $controller.='$data["alertsuccess"]="'.$tablename.' created Successfully.";'."\n";
+            
+                $controller.='$data["redirect"]="site/view'.$tablename.'";'."\n";
+                $controller.='$this->load->view("redirect",$data);'."\n";
+            $controller.='}'."\n";
+            
+            
+            $controller.='}'."\n";
+            
+//            echo $controller;
+            
+            //edit
+            
+            $controller.='public function edit'.$tablename.''."\n";
+            $controller.='{'."\n";
+            $controller.='$access=array("1");'."\n";
+            $controller.='$this->checkaccess($access);'."\n";
+            $controller.='$data["page"]="edit'.$tablename.'";'."\n";
+            $controller.='$data["title"]="Edit '.$tablename.'";'."\n";
+            $controller.='$data["before"]=$this->'.$tablename.'_model->beforeedit($this->input->get("id"));'."\n";
+            $controller.='$this->load->view("template",$data);'."\n";
+            $controller.='}'."\n";
+            
+            
+            //editsubmit
+            
+            $controller.='public function edit'.$tablename.'submit'."\n";
+            $controller.='{'."\n";
+            $controller.='$access=array("1");'."\n";
+            $controller.='$this->checkaccess($access);'."\n";
+            
+            foreach($allfields as $fieldrow)
+            {
+                        $id=$fieldrow->id;
+                        $sqlname=$fieldrow->sqlname;
+                        $title=$fieldrow->title;
+                        $type=$fieldrow->sqltypename;
+                        $isprimary=$fieldrow->isprimary;
+                        $autoincrement=$fieldrow->autoincrement;
+                $controller.='$this->form_validation->set_rules("'.$sqlname.'","'.$title.'","trim");'."\n";
+                
+             }
+            $controller.='if($this->form_validation->run()==FALSE)'."\n";
+            $controller.='{'."\n";
+                $controller.='$data["alerterror"]=validation_errors();'."\n";
+                $controller.='$data["page"]="edit'.$tablename.'";'."\n";
+                $controller.='$data["title"]="Edit '.$tablename.'";'."\n";
+                $controller.='$data["before"]=$this->'.$tablename.'_model->beforeedit($this->input->get("id"));'."\n";
+                $controller.='$this->load->view("template",$data);'."\n";
+            $controller.='}'."\n";
+            $controller.='else'."\n";
+            $controller.='{'."\n";
+                foreach($allfields as $fieldrow)
+                {
+                            $id=$fieldrow->id;
+                            $sqlname=$fieldrow->sqlname;
+                            $title=$fieldrow->title;
+                            $type=$fieldrow->sqltypename;
+                            $isprimary=$fieldrow->isprimary;
+                            $autoincrement=$fieldrow->autoincrement;
+                    $controller.='$'.$sqlname.'=$this->input->get_post("'.$sqlname.'");'."\n";
+
+                 }
+                $controller.='if($this->'.$tablename.'_model->edit(';
+            $string="";
+                foreach($allfields as $fieldrow)
+                {
+                            $id=$fieldrow->id;
+                            $sqlname=$fieldrow->sqlname;
+                            $title=$fieldrow->title;
+                            $type=$fieldrow->sqltypename;
+                            $isprimary=$fieldrow->isprimary;
+                            $autoincrement=$fieldrow->autoincrement;
+//                    if(end($allfields))
+                    $string=$string.'$'.$sqlname.',';
+
+                 }
+                $controller.=rtrim($string, ",");
+                $controller.=')==0)'."\n";
+                
+                $controller.='$data["alerterror"]="New '.$tablename.' could not be Updated.";'."\n";
+                $controller.='else'."\n";
+                $controller.='$data["alertsuccess"]="'.$tablename.' Updated Successfully.";'."\n";
+            
+                $controller.='$data["redirect"]="site/view'.$tablename.'";'."\n";
+                $controller.='$this->load->view("redirect",$data);'."\n";
+            $controller.='}'."\n";
+            
+            
+            $controller.='}'."\n";
+            
+            //delete
+            
+            $controller.='public function delete'.$tablename.''."\n";
+            $controller.='{'."\n";
+            $controller.='$access=array("1");'."\n";
+            $controller.='$this->checkaccess($access);'."\n";
+            $controller.='$this->'.$tablename.'_model->delete($this->input->get("id"));'."\n";
+            $controller.='$data["redirect"]="site/view'.$tablename.'";'."\n";
+            $controller.='$this->load->view("redirect",$data);'."\n";
+            $controller.='}'."\n";
+            
+//            echo $controller;
+            
+            
+            //model
+            $modeldata='<?php';
+            $modeldata.= "\n" .'if ( !defined( "BASEPATH" ) )'."\n".'exit( "No direct script access allowed" );'."\n";
+            $modeldata.='class '.$tablename.'_model extends CI_Model'."\n";
+            $modeldata.='{'."\n";
+            
+            //create
+                $modeldata.='public function create(';
+            $string="";
+                    foreach($allfields as $fieldrow)
+                        {
+                                    $id=$fieldrow->id;
+                                    $sqlname=$fieldrow->sqlname;
+                                    $title=$fieldrow->title;
+                                    $type=$fieldrow->sqltypename;
+                                    $isprimary=$fieldrow->isprimary;
+                                    $autoincrement=$fieldrow->autoincrement;
+                            $string=$string.'$'.$sqlname.',';
+
+                 }
+                $string=rtrim($string, ",");
+            $modeldata.=$string;
+                $modeldata.=')'."\n";
+                $modeldata.='{'."\n";
+                    $modeldata.='$data=array(';
+                        $datastring="";
+                         foreach($allfields as $fieldrow)
+                        {
+                                    $id=$fieldrow->id;
+                                    $sqlname=$fieldrow->sqlname;
+                                    $title=$fieldrow->title;
+                                    $type=$fieldrow->sqltypename;
+                                    $isprimary=$fieldrow->isprimary;
+                                    $autoincrement=$fieldrow->autoincrement;
+                            $datastring=$datastring. '"'.$sqlname.'" => $'.$sqlname.',';
+                            
+                         }
+                        $datastring=rtrim($datastring, ",");
+                        $modeldata.=$datastring;
+                    $modeldata.=');'."\n";
+                    $modeldata.='$query=$this->db->insert( "'.$databasename."_".$tablename.'", $data );'."\n";
+                    $modeldata.='$id=$this->db->insert_id();'."\n";
+                    $modeldata.='if(!$query)'."\n".'return  0;'."\n".'else'."\n".'return  $id;'."\n";
+                $modeldata.='}'."\n";
+            
+             
+            //beforeedit
+            $modeldata.='public function beforeedit($id)'."\n";
+                $modeldata.='{'."\n";
+                    $modeldata.='$this->db->where("id",$id);'."\n";
+                    $modeldata.='$query=$this->db->get("'.$databasename."_".$tablename.'")->row();'."\n";
+                    $modeldata.='return $query;'."\n";
+                $modeldata.='}'."\n";
+            
+            
+            //edit
+            $modeldata.='public function edit(';
+            $string="";
+                    foreach($allfields as $fieldrow)
+                        {
+                                    $id=$fieldrow->id;
+                                    $sqlname=$fieldrow->sqlname;
+                                    $title=$fieldrow->title;
+                                    $type=$fieldrow->sqltypename;
+                                    $isprimary=$fieldrow->isprimary;
+                                    $autoincrement=$fieldrow->autoincrement;
+                            $string=$string.'$'.$sqlname.',';
+
+                 }
+                $string=rtrim($string, ",");
+            $modeldata.=$string;
+                $modeldata.=')'."\n";
+                $modeldata.='{'."\n";
+                    $modeldata.='$data=array(';
+            $datastring="";
+                         foreach($allfields as $fieldrow)
+                        {
+                                    $id=$fieldrow->id;
+                                    $sqlname=$fieldrow->sqlname;
+                                    $title=$fieldrow->title;
+                                    $type=$fieldrow->sqltypename;
+                                    $isprimary=$fieldrow->isprimary;
+                                    $autoincrement=$fieldrow->autoincrement;
+                            $datastring=$datastring. '"'.$sqlname.'" => $'.$sqlname.',';
+                            
+                         }
+                        $datastring=rtrim($datastring, ",");
+                        $modeldata.=$datastring;
+                    $modeldata.=');'."\n";
+                    $modeldata.='$this->db->where( "id", $id );'."\n";
+                    $modeldata.='$query=$this->db->update( "'.$databasename."_".$tablename.'", $data );'."\n";
+                    $modeldata.='return 1;'."\n";
+                $modeldata.='}'."\n";
+                
+            
+             //delete
+            $modeldata.='public function delete($id)'."\n";
+                $modeldata.='{'."\n";
+                    $modeldata.='$query=$this->db->query("DELETE FROM `'.$databasename."_".$tablename.'` WHERE `id`=\'$id\'");'."\n";
+                    $modeldata.='return $query;'."\n";
+                $modeldata.='}'."\n";
+            
+            $modeldata.='}'."\n";
+            
+//            echo $modeldata;
+            
+           //json
+			
+            //getalljson
+            $jsondata="";
+            
+            
+            
+            
+            
+            
+            $url=$_SERVER["SCRIPT_FILENAME"];
+            $url=substr($url,0,-9);
+            $url.='admins/'.$databasename.'/application/models/'.$tablename.'_model.php';
+//            $urljson=$url.'admins/'.$databasename.'/application/controllers/json.php';
+//                $url='C:\xampp\htdocs\createOBackend\admins\\'.$databasename.'\application\models\\'.$tablename.'_model.php';
+//            echo $url;
+           
+        if ( ! write_file($url, $modeldata))
+        {
+             echo 'Unable to write the file';
+        }
+        else
+        {
+             echo 'File written!';
+        }
+        
+            
+//       
+//            //views
+//            
+//            //createview
+//            
+//            
+//            echo '<div class="row" style="padding:1% 0">'."\n";
+//            echo '<div class="col-md-12">';
+//            echo '<div class="pull-right">';  
+//            echo '<div>';   
+//            
+//            
+//            
+            
+            
+            
+//            print_r($allfields);
+            $fields=array();
+//            $fields1=array();
+//            $this->dbforge->add_field('id');
+           foreach($allfields as $fieldrow)
+            {
+                        $id=$fieldrow->id;
+                        $sqlname=$fieldrow->sqlname;
+                        $type=$fieldrow->sqltypename;
+                        $isprimary=$fieldrow->isprimary;
+                        $autoincrement=$fieldrow->autoincrement;
+               
+             }
+//            print_r($fields);
+            
+            
+           
+//            $this->dbforge->add_field($fields);
+//            $this->dbforge->create_table($databasename."_".$tablename);
+            
+           
+        
+        }
+//          $alljson.='} ?>';
+//        
+//            $urlforjson=$_SERVER["SCRIPT_FILENAME"];
+//            $urlforjson=substr($urlforjson,0,-9);
+//            $urljson=$urlforjson.'admins/'.$databasename.'/application/controllers/json.php';
+//        if ( ! write_file($urljson, $alljson))
+//        {
+//             echo 'Unable to write the file';
+//        }
+//        else
+//        {
+//             echo 'File written!';
+//        }
+    
+        // for git only    
+        //echo shell_exec("git clone https://github.com/avinashghare/createO.git");
+        //echo shell_exec("mv createO $databasename");
+        //echo shell_exec("mv $databasename admins");
+        
+        
+            
+	}
+    
+    function readpath() {
+        $this->load->helper('file');
+        echo base_url('/admins/toykraft/application/controllers/site.php');
+//        $string = read_file(base_url('/admins/toykraft/application/controllers/site.php'));
+//        $string = read_file('C:\xampp\htdocs\createOBackend\admins\toykraft\application\controllers\site.php');
+        $data = 'Some file data';
+
+        if ( ! write_file('C:\xampp\htdocs\createOBackend\admins\toykraft\application\controllers\demo.php', $data))
+        {
+             echo 'Unable to write the file';
+        }
+        else
+        {
+             echo 'File written!';
+        }
+        
+    }
+    function testing () {
+        print_r($_SERVER);
+//        $text=$_SERVER["SCRIPT_FILENAME"];
+//        $text=substr($text,0,-9);
+        echo $text;
+    }
+   
+    
 }
 ?>
