@@ -1787,6 +1787,7 @@ class Site extends CI_Controller
         $id=$this->input->get('id');
         
         $project=$this->db->query("SELECT * FROM `project` WHERE `id`='$id'")->row();
+        $projectid=$id;
         $databasename=$project->name;
         $this->load->dbforge();
         
@@ -1849,21 +1850,24 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
         
         }
     
-        // for git only    
-        //echo shell_exec("git clone https://github.com/avinashghare/createO.git");
-        //echo shell_exec("mv createO $databasename");
-        //echo shell_exec("mv $databasename admins");
+//         for git only    
+        echo shell_exec("git clone https://github.com/avinashghare/createO.git");
+        echo shell_exec("mv createO $databasename");
+        echo shell_exec("mv $databasename admins");
         
-        
+        $this->executeproject1($projectid);
             
 	}
     
 	function executeproject1()
+//	function executeproject1($id)
 	{
         
         
 		$access = array("1");
 		$this->checkaccess($access);
+        
+        
         $id=$this->input->get('id');
         
         $project=$this->db->query("SELECT * FROM `project` WHERE `id`='$id'")->row();
@@ -1880,7 +1884,17 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
 class Json extends CI_Controller 
 {';
         
-    
+    $controller="";
+        
+		$urlforcontrollertest=$_SERVER["SCRIPT_FILENAME"];
+        $urlforcontrollertest=substr($urlforcontrollertest,0,-9);
+        $urlcontrollertest=$urlforcontrollertest.'admins/'.$databasename.'/application/controllers/site.php';
+        
+        $controllerfile=read_file($urlcontrollertest);
+        $controllerfile=substr($controllerfile,0,-5);
+        $controller.=$controllerfile;
+        
+        
         foreach ($tablenames as $rowtable)
         {
 //            echo $rowtable->id;
@@ -1903,7 +1917,7 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
 //            echo '$this->load->view("template",$data);'."\n";
 //            echo "}\n";
             
-            $controller="";
+//            $controller="";
             $controller.="public function view".$tablename."()\n";
             $controller.="{\n";
             $controller.='$access=array("1");'."\n";
@@ -1919,6 +1933,8 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
             $controller.='function view'.$tablename.'json()'."\n";
             $controller.="{\n";
             $j=0;
+            
+            $controller.='$elements=array();'."\n";
             foreach($allfields as $fieldrow)
             {
                         $id=$fieldrow->id;
@@ -1927,7 +1943,6 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
                         $type=$fieldrow->sqltypename;
                         $isprimary=$fieldrow->isprimary;
                         $autoincrement=$fieldrow->autoincrement;
-                $controller.='$elements=array();'."\n";
                 $controller.='$elements['.$j.']=new stdClass();'."\n";
                 $controller.='$elements['.$j.']->field="`'.$databasename."_".$tablename.'`.`'.$sqlname.'`";'."\n";
                 $controller.='$elements['.$j.']->sort="1";'."\n";
@@ -1961,7 +1976,7 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
 //            echo $controller;
             //create 
             
-            $controller.='public function create'.$tablename.''."\n";
+            $controller.='public function create'.$tablename."()"."\n";
             $controller.='{'."\n";
             $controller.='$access=array("1");'."\n";
             $controller.='$this->checkaccess($access);'."\n";
@@ -1972,7 +1987,7 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
             
             //createsubmit
             
-            $controller.='public function create'.$tablename.'submit'."\n";
+            $controller.='public function create'.$tablename.'submit() '."\n";
             $controller.='{'."\n";
             $controller.='$access=array("1");'."\n";
             $controller.='$this->checkaccess($access);'."\n";
@@ -1985,7 +2000,18 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
                         $type=$fieldrow->sqltypename;
                         $isprimary=$fieldrow->isprimary;
                         $autoincrement=$fieldrow->autoincrement;
-                $controller.='$this->form_validation->set_rules("'.$sqlname.'","'.$title.'","trim");'."\n";
+                        
+                        if($fieldrow->sqlname=='id')
+                        {
+                        }
+                        elseif($fieldrow->sqltype== 10)
+                        {
+                            $controller.='Hello image is arrived'."\n";
+                        }
+                        else
+                        {
+                            $controller.='$this->form_validation->set_rules("'.$sqlname.'","'.$title.'","trim");'."\n";
+                        }
                 
              }
             $controller.='if($this->form_validation->run()==FALSE)'."\n";
@@ -2002,10 +2028,48 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
                             $id=$fieldrow->id;
                             $sqlname=$fieldrow->sqlname;
                             $title=$fieldrow->title;
+                            $fieldtype=$fieldrow->type;
                             $type=$fieldrow->sqltypename;
                             $isprimary=$fieldrow->isprimary;
                             $autoincrement=$fieldrow->autoincrement;
-                    $controller.='$'.$sqlname.'=$this->input->get_post("'.$sqlname.'");'."\n";
+                            
+                        if($fieldrow->sqlname=='id')
+                        {
+                        }
+//                        else if($fieldtype== 10)
+//                        {
+//                            $controller.='$config["upload_path"] = "./uploads/";';
+//                            $controller.='$config["allowed_types"] = "gif|jpg|png|jpeg";';
+//                            $controller.='$this->load->library("upload", $config);';
+//                            $controller.='$filename="'.$sqlname.'"';
+//                            $controller.='$'.$sqlname.'="";';
+//                            $controller.='if (  $this->upload->do_upload($filename))';
+//                            $controller.='{';
+//                                $controller.='$uploaddata = $this->upload->data();';
+//                                $controller.='$'.$sqlname.'=$uploaddata["file_name"];';
+//                                $controller.='$config_r["source_image"]   = "./uploads/" . $uploaddata["file_name"];';
+//                                $controller.='$config_r["maintain_ratio"] = TRUE;';
+//                                $controller.='$config_t["create_thumb"] = FALSE;';
+//                                $controller.='$config_r["width"]   = 600;';
+//                                $controller.='$config_r["height"]   = 600;';
+//                                $controller.='$config_r["quality"]   = 100;';
+//                                $controller.='$this->load->library("image_lib", $config_r);';
+//                                $controller.='$this->image_lib->initialize($config_r);';
+//                                $controller.='if(!$this->image_lib->resize())';
+//                                $controller.='{';
+//                                    $controller.='echo "Failed".$this->image_lib->display_errors();';
+//                                $controller.='}';
+//                                $controller.='else';
+//                                $controller.='{';
+//                                    $controller.='$'.$sqlname.'=$this->image_lib->dest_image;';
+//                                $controller.='}';
+//                            $controller.='}';
+//                           
+//                        }
+                        else
+                        {
+                            $controller.='$'.$sqlname.'=$this->input->get_post("'.$sqlname.'");'."\n";
+                        }
 
                  }
                 $controller.='if($this->'.$tablename.'_model->create(';
@@ -2019,7 +2083,13 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
                             $isprimary=$fieldrow->isprimary;
                             $autoincrement=$fieldrow->autoincrement;
 //                    if(end($allfields))
+                    if($fieldrow->sqlname=='id')
+                        {
+                        }
+                    else
+                    {
                     $string=$string.'$'.$sqlname.',';
+                    }
 
                  }
                 $controller.=rtrim($string, ",");
@@ -2040,7 +2110,7 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
             
             //edit
             
-            $controller.='public function edit'.$tablename.''."\n";
+            $controller.='public function edit'.$tablename.'()'."\n";
             $controller.='{'."\n";
             $controller.='$access=array("1");'."\n";
             $controller.='$this->checkaccess($access);'."\n";
@@ -2053,7 +2123,7 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
             
             //editsubmit
             
-            $controller.='public function edit'.$tablename.'submit'."\n";
+            $controller.='public function edit'.$tablename.'submit()'."\n";
             $controller.='{'."\n";
             $controller.='$access=array("1");'."\n";
             $controller.='$this->checkaccess($access);'."\n";
@@ -2120,7 +2190,7 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
             
             //delete
             
-            $controller.='public function delete'.$tablename.''."\n";
+            $controller.='public function delete'.$tablename.'()'."\n";
             $controller.='{'."\n";
             $controller.='$access=array("1");'."\n";
             $controller.='$this->checkaccess($access);'."\n";
@@ -2149,7 +2219,14 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
                                     $type=$fieldrow->sqltypename;
                                     $isprimary=$fieldrow->isprimary;
                                     $autoincrement=$fieldrow->autoincrement;
-                            $string=$string.'$'.$sqlname.',';
+                        
+									if($fieldrow->sqlname=='id')
+                                    {
+                                    }
+                                    else
+                                    {
+                                        $string=$string.'$'.$sqlname.',';
+                                    }
 
                  }
                 $string=rtrim($string, ",");
@@ -2166,7 +2243,14 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
                                     $type=$fieldrow->sqltypename;
                                     $isprimary=$fieldrow->isprimary;
                                     $autoincrement=$fieldrow->autoincrement;
-                            $datastring=$datastring. '"'.$sqlname.'" => $'.$sqlname.',';
+                             
+									if($fieldrow->sqlname=='id')
+                                    {
+                                    }
+                                    else
+                                    {
+                                        $datastring=$datastring. '"'.$sqlname.'" => $'.$sqlname.',';
+                                    }
                             
                          }
                         $datastring=rtrim($datastring, ",");
@@ -2186,6 +2270,13 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
                     $modeldata.='return $query;'."\n";
                 $modeldata.='}'."\n";
             
+            //getsingle for json
+            $modeldata.='function getsingle'.$tablename.'($id)';
+                $modeldata.='{'."\n";
+                    $modeldata.='$this->db->where("id",$id);'."\n";
+                    $modeldata.='$query=$this->db->get("'.$databasename."_".$tablename.'")->row();'."\n";
+                    $modeldata.='return $query;'."\n";
+                $modeldata.='}'."\n";
             
             //edit
             $modeldata.='public function edit(';
@@ -2215,7 +2306,13 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
                                     $type=$fieldrow->sqltypename;
                                     $isprimary=$fieldrow->isprimary;
                                     $autoincrement=$fieldrow->autoincrement;
-                            $datastring=$datastring. '"'.$sqlname.'" => $'.$sqlname.',';
+                                    if($fieldrow->sqlname=='id')
+                                    {
+                                    }
+                                    else
+                                    {
+                                        $datastring=$datastring. '"'.$sqlname.'" => $'.$sqlname.',';
+                                    }
                             
                          }
                         $datastring=rtrim($datastring, ",");
@@ -2242,6 +2339,55 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
 			
             //getalljson
             $jsondata="";
+            $jsondata.='function getall'.$tablename.'()'."\n";
+            $jsondata.='{'."\n";
+                $j=0;
+                foreach($allfields as $fieldrow)
+                {
+                            $id=$fieldrow->id;
+                            $sqlname=$fieldrow->sqlname;
+                            $title=$fieldrow->title;
+                            $type=$fieldrow->sqltypename;
+                            $isprimary=$fieldrow->isprimary;
+                            $autoincrement=$fieldrow->autoincrement;
+                    $jsondata.='$elements=array();'."\n";
+                    $jsondata.='$elements['.$j.']=new stdClass();'."\n";
+                    $jsondata.='$elements['.$j.']->field="`'.$databasename."_".$tablename.'`.`'.$sqlname.'`";'."\n";
+                    $jsondata.='$elements['.$j.']->sort="1";'."\n";
+                    $jsondata.='$elements['.$j.']->header="'.$title.'";'."\n";
+                    $jsondata.='$elements['.$j.']->alias="'.$sqlname.'";'."\n\n";
+
+                   $j++;
+                 }
+                $jsondata.='$search=$this->input->get_post("search");'."\n";
+                $jsondata.='$pageno=$this->input->get_post("pageno");'."\n";
+                $jsondata.='$orderby=$this->input->get_post("orderby");'."\n";
+                $jsondata.='$orderorder=$this->input->get_post("orderorder");'."\n";
+                $jsondata.='$maxrow=$this->input->get_post("maxrow");'."\n";
+
+                $jsondata.='if($maxrow=="")'."\n";
+                $jsondata.='{'."\n";
+                $jsondata.='}'."\n";
+                $jsondata.='if($orderby=="")'."\n";
+                $jsondata.='{'."\n";
+                $jsondata.='$orderby="id";'."\n";
+                $jsondata.='$orderorder="ASC";'."\n";
+                $jsondata.='}'."\n";
+
+                $jsondata.='$data["message"]=$this->chintantable->query($pageno,$maxrow,$orderby,$orderorder,$search,$elements,"FROM `'.$databasename."_".$tablename.'`");'."\n";
+
+                $jsondata.='$this->load->view("json",$data);'."\n";
+            $jsondata.='}'."\n";
+            
+            //getsingle
+            $jsondata.='public function getsingle'.$tablename.'()'."\n";
+            $jsondata.='{'."\n";
+                $jsondata.='$id=$this->input->get_post("id");'."\n";
+                $jsondata.='$data["message"]=$this->'.$tablename.'_model->getsingle'.$tablename.'($id);'."\n";
+                $jsondata.='$this->load->view("json",$data);'."\n";
+            $jsondata.='}'."\n";
+           
+            $alljson.=$jsondata;
             
             
             
@@ -2254,7 +2400,7 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
 //            $urljson=$url.'admins/'.$databasename.'/application/controllers/json.php';
 //                $url='C:\xampp\htdocs\createOBackend\admins\\'.$databasename.'\application\models\\'.$tablename.'_model.php';
 //            echo $url;
-           
+           $modeldata.='?>'."\n";
         if ( ! write_file($url, $modeldata))
         {
              echo 'Unable to write the file';
@@ -2265,65 +2411,438 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
         }
         
             
-//       
-//            //views
-//            
-//            //createview
-//            
-//            
-//            echo '<div class="row" style="padding:1% 0">'."\n";
-//            echo '<div class="col-md-12">';
-//            echo '<div class="pull-right">';  
-//            echo '<div>';   
-//            
-//            
-//            
             
             
             
-//            print_r($allfields);
-            $fields=array();
-//            $fields1=array();
-//            $this->dbforge->add_field('id');
-           foreach($allfields as $fieldrow)
-            {
-                        $id=$fieldrow->id;
-                        $sqlname=$fieldrow->sqlname;
-                        $type=$fieldrow->sqltypename;
-                        $isprimary=$fieldrow->isprimary;
-                        $autoincrement=$fieldrow->autoincrement;
-               
-             }
-//            print_r($fields);
+             //views
+            $viewdata="";
+            $viewdata.='<div class="row" style="padding:1% 0">'."\n";
+            $viewdata.='<div class="col-md-12">'."\n";
+           $viewdata.='<a class="btn btn-primary pull-right"  href="<?php echo site_url("site/create'.$tablename.'"); ?>"><i class="icon-plus"></i>Create </a> &nbsp; '."\n";  
+            $viewdata.='</div>'."\n"; 
+            $viewdata.='</div>'."\n"; 
+            $viewdata.='<div class="row">'."\n";
+	$viewdata.='<div class="col-lg-12">'."\n";
+		$viewdata.='<section class="panel">'."\n";
+			$viewdata.='<header class="panel-heading">'."\n";
+                $viewdata.=$tablename.' Details'."\n";
+            $viewdata.='</header>'."\n";
+            $viewdata.='<div class="drawchintantable">'."\n";
+            $viewdata.='<?php $this->chintantable->createsearch("'.$tablename.' List");?>'."\n";
+            $viewdata.='<table class="table table-striped table-hover" id="" cellpadding="0" cellspacing="0" >'."\n";
+            $viewdata.='<thead>'."\n";
+            $viewdata.='<tr>'."\n";
+            $string="";
+            foreach($allfields as $fieldrow)
+                        {
+                                    $id=$fieldrow->id;
+                                    $sqlname=$fieldrow->sqlname;
+                                    $title=$fieldrow->title;
+                                    $type=$fieldrow->sqltypename;
+                                    $isprimary=$fieldrow->isprimary;
+                                    $autoincrement=$fieldrow->autoincrement;
+//                            $string=$string.'$'.$sqlname.',';
+                                $viewdata.='<th data-field="'.$sqlname.'">'.$title.'</th>'."\n";   
+                        }
+            $viewdata.='</tr>'."\n";
+            $viewdata.='</thead>'."\n";
+            $viewdata.='<tbody>'."\n";
+            $viewdata.='</tbody>'."\n";
+            $viewdata.='</table>'."\n";
+            $viewdata.='<?php $this->chintantable->createpagination();?>'."\n";
+            $viewdata.='</div>'."\n";
+            $viewdata.='</section>'."\n";
+            
+            $viewdata.='<script>'."\n";
+            $viewdata.='function drawtable(resultrow) {'."\n";
+            $viewdata.='return "<tr>';
+            $numItems = count($allfields);
+            $i = 0;
+            $endtext="";
+            foreach($allfields as $fieldrow)
+                        {
+                if($fieldrow->sqlname=='id')
+                {
+                    $endtext='id';
+                }
+                if ($fieldrow === end($allfields))
+                                    $id=$fieldrow->id;
+                                    $sqlname=$fieldrow->sqlname;
+                                    $title=$fieldrow->title;
+                                    $type=$fieldrow->sqltypename;
+                                    $isprimary=$fieldrow->isprimary;
+                                    $autoincrement=$fieldrow->autoincrement;
+                                    $viewdata.='<td>" + resultrow.'.$sqlname.' + "</td>';
+//                                    if ($fieldrow === end($allfields))
+//                                    {
+//                                        
+//                                    }
+                        }
+            $viewdata.="<td><a class='btn btn-primary btn-xs' href='<?php echo site_url('site/edit".$tablename."?id=');?>\"+resultrow.".$endtext."+\"'><i class='icon-pencil'></i></a><a class='btn btn-danger btn-xs' href='<?php echo site_url('site/delete".$tablename."?id='); ?>\"+resultrow.".$endtext."+\"'><i class='icon-trash '></i></a></td>";
+            
+//            $viewdata.=endtext();
+            $viewdata.='</tr>';
+            $viewdata.='";'."\n";
+            $viewdata.='}'."\n";
+            $viewdata.='generatejquery("<?php echo $base_url;?>");'."\n";
+            $viewdata.='</script>'."\n";
+            $viewdata.='</div>'."\n";
+            $viewdata.='</div>'."\n";
             
             
-           
-//            $this->dbforge->add_field($fields);
-//            $this->dbforge->create_table($databasename."_".$tablename);
-            
-           
-        
+		$urlforviewpage=$_SERVER["SCRIPT_FILENAME"];
+        $urlforviewpage=substr($urlforviewpage,0,-9);
+        $urlviewpage=$urlforviewpage.'admins/'.$databasename.'/application/views/backend/view'.$tablename.'.php';
+        if ( ! write_file($urlviewpage, $viewdata))
+        {
+             echo 'Unable to write the file';
         }
-//          $alljson.='} ?>';
-//        
-//            $urlforjson=$_SERVER["SCRIPT_FILENAME"];
-//            $urlforjson=substr($urlforjson,0,-9);
-//            $urljson=$urlforjson.'admins/'.$databasename.'/application/controllers/json.php';
-//        if ( ! write_file($urljson, $alljson))
-//        {
-//             echo 'Unable to write the file';
-//        }
-//        else
-//        {
-//             echo 'File written!';
-//        }
+        else
+        {
+             echo 'File written!';
+        }
+		 
+            
+            
+            //createpage
+            
+            
+            $createdata="";
+            $createdata.='<div class="row" style="padding:1% 0">'."\n";
+            $createdata.='<div class="col-md-12">'."\n";
+            $createdata.='<div class="pull-right">'."\n";
+            $createdata.='</div>'."\n";
+            $createdata.='</div>'."\n";
+            $createdata.='</div>'."\n";
+            $createdata.='<div class="row">'."\n";
+            $createdata.='<div class="col-lg-12">'."\n";
+            $createdata.='<section class="panel">'."\n";
+            $createdata.='<header class="panel-heading">'."\n";
+            $createdata.=$tablename.' Details'."\n";
+            $createdata.='</header>'."\n";
+            $createdata.='<div class="panel-body">'."\n";
+            $createdata.="<form class='form-horizontal tasi-form' method='post' action='<?php echo site_url(\"site/create".$tablename."submit\");?>' enctype= 'multipart/form-data'>"."\n";
+            $createdata.='<div class="panel-body">'."\n";
+            foreach($allfields as $fieldrow)
+                        {
+                                    $id=$fieldrow->id;
+                                    $sqlname=$fieldrow->sqlname;
+                                    $title=$fieldrow->title;
+                                    $fieldtype=$fieldrow->type;
+                                    $fieldtypename=$fieldrow->fieldtypename;
+                                    $type=$fieldrow->sqltypename;
+                                    $isprimary=$fieldrow->isprimary;
+                                    $autoincrement=$fieldrow->autoincrement;
+                                    if($fieldrow->sqlname=='id')
+                                    {
+                                    }
+                                    elseif($fieldrow->sqltype== 4)
+                                    {
+
+                                    }
+                                    else
+                                    {
+                                        if($fieldtype==1)
+                                        {
+                                        $createdata.='<div class="form-group">'."\n";
+                                        $createdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+                                        $createdata.='<div class="col-sm-4">'."\n";
+                                        $createdata.='<input type="text" id="normal-field" class="form-control" name="'.$sqlname.'" value=\'<?php echo set_value(\''.$sqlname.'\');?>\'>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        }
+                                        if($fieldtype==2)
+                                        {
+                                        $createdata.='<div class=" form-group">'."\n";
+                                        $createdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+                                        $createdata.='<div class="col-sm-8">'."\n";
+                                        $createdata.='<textarea name="'.$sqlname.'" id="" cols="20" rows="10" class="form-control tinymce"><?php echo set_value( \''.$sqlname.'\');?></textarea>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        }
+                                        if($fieldtype==3)
+                                        {
+                                        $createdata.='<div class=" form-group">'."\n";
+                                        $createdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+                                        $createdata.='<div class="col-sm-4">'."\n";
+                                        $createdata.='<?php echo form_dropdown("'.$sqlname.'",$'.$sqlname.',set_value(\''.$sqlname.'\'),"class=\'chzn-select form-control\'");?>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        }
+                                        if($fieldtype==5)
+                                        {
+                                        $createdata.='<div class=" form-group">'."\n";
+                                        $createdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+                                        $createdata.='<div class="col-sm-4">'."\n";
+                                        $createdata.='<?php echo form_dropdown("'.$sqlname.'",$'.$sqlname.',set_value(\''.$sqlname.'\'),"class=\'chzn-select form-control\'" multiple);?>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        }
+
+                                        if($fieldtype==7)
+                                        {
+                                        $createdata.='<div class="form-group" style="display:none;">'."\n";
+                                        $createdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+                                        $createdata.='<div class="col-sm-4">'."\n";
+                                        $createdata.='<input type="text" id="normal-field" class="form-control" name="'.$sqlname.'" value=\'<?php echo set_value(\''.$sqlname.'\');?>\'>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        }
+
+                                        if($fieldtype==8)
+                                        {
+                                        $createdata.='<div class="form-group">'."\n";
+                                        $createdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+                                        $createdata.='<div class="col-sm-4">'."\n";
+                                        $createdata.='<input type="email" id="normal-field" class="form-control" name="'.$sqlname.'" value=\'<?php echo set_value(\''.$sqlname.'\');?>\'>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        }
+                                        if($fieldtype==9)
+                                        {
+                                        $createdata.='<div class="form-group">'."\n";
+                                        $createdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+                                        $createdata.='<div class="col-sm-4">'."\n";
+                                        $createdata.='<input type="number" id="normal-field" class="form-control" name="'.$sqlname.'" value=\'<?php echo set_value(\''.$sqlname.'\');?>\'>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        }
+                                        if($fieldtype==11)
+                                        {
+                                        $createdata.='<div class="form-group">'."\n";
+                                        $createdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+                                        $createdata.='<div class="col-sm-4">'."\n";
+                                        $createdata.='<input type="date" id="normal-field" class="form-control" name="'.$sqlname.'" value=\'<?php echo set_value(\''.$sqlname.'\');?>\'>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        }
+
+                                        if($fieldtype==10)
+                                        {
+                                        $createdata.='<div class=" form-group">'."\n";
+                                        $createdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+                                        $createdata.='<div class="col-sm-4">'."\n";
+                                        $createdata.='<input type="file" id="normal-field" class="form-control" name="'.$sqlname.'" value=\'<?php echo set_value(\''.$sqlname.'\');?>\'>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        $createdata.='</div>'."\n";
+                                        }
+                                    }
+                
+                        }
+            
+            
+                                    $createdata.='<div class="form-group">'."\n";
+                                    $createdata.='<label class="col-sm-2 control-label" for="normal-field">&nbsp;</label>'."\n";
+                                    $createdata.='<div class="col-sm-4">'."\n";
+                                    $createdata.='<button type="submit" class="btn btn-primary">Save</button>'."\n";
+                                    $createdata.='<a href="<?php echo site_url("site/viewpage"); ?>" class="btn btn-secondary">Cancel</a>'."\n";
+                                    $createdata.='</div>'."\n";
+                                    $createdata.='</div>'."\n";
+            
+            $createdata.='</form>'."\n";
+            $createdata.='</div>'."\n";
+            $createdata.='</section>'."\n";
+            $createdata.='</div>'."\n";
+            $createdata.='</div>'."\n";
+            
+            
+                          
+		$urlforcreatepage=$_SERVER["SCRIPT_FILENAME"];
+        $urlforcreatepage=substr($urlforcreatepage,0,-9);
+        $urlcreatepage=$urlforcreatepage.'admins/'.$databasename.'/application/views/backend/create'.$tablename.'.php';
+        if ( ! write_file($urlcreatepage, $createdata))
+        {
+             echo 'Unable to write the file';
+        }
+        else
+        {
+             echo 'File written!';
+        }
+		 
+           //editdata
+            
+            $editdata='';
+            $editdata.='<section class="panel">'."\n";
+            $editdata.='<header class="panel-heading">'."\n";
+            $editdata.=$tablename.' Details'."\n";
+            $editdata.='</header>'."\n";
+            $editdata.='<div class="panel-body">'."\n";
+            $editdata.="<form class='form-horizontal tasi-form' method='post' action='<?php echo site_url(\"site/edit".$tablename."submit\");?>' enctype= 'multipart/form-data'>"."\n";
+            $editdata.='<input type="hidden" id="normal-field" class="form-control" name="id" value="<?php echo set_value(\'id\',$before->id);?>" style="display:none;">'."\n";
+            foreach($allfields as $fieldrow)
+                        {
+//                if ($fieldrow === end($allfields))
+                                    $id=$fieldrow->id;
+                                    $sqlname=$fieldrow->sqlname;
+                                    $title=$fieldrow->title;
+                                    $fieldtype=$fieldrow->type;
+                                    $fieldtypename=$fieldrow->fieldtypename;
+                                    $type=$fieldrow->sqltypename;
+                                    $isprimary=$fieldrow->isprimary;
+                                    $autoincrement=$fieldrow->autoincrement;
+									
+									if($fieldrow->sqlname=='id')
+                                    {
+//                                        $endtext=$fieldrow->sqlname;
+                                    }
+									else
+									{
+                
+										if($fieldtype==1)
+										{
+										$editdata.='<div class="form-group">'."\n";
+										$editdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+										$editdata.='<div class="col-sm-4">'."\n";
+										$editdata.='<input type="text" id="normal-field" class="form-control" name="'.$sqlname.'" value=\'<?php echo set_value(\''.$sqlname.'\',$before->'.$sqlname.');?>\'>'."\n";
+										$editdata.='</div>'."\n";
+										$editdata.='</div>'."\n";
+										}
+										if($fieldtype==2)
+										{
+										$editdata.='<div class=" form-group">'."\n";
+										$editdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+										$editdata.='<div class="col-sm-8">'."\n";
+										$editdata.='<textarea name="'.$sqlname.'" id="" cols="20" rows="10" class="form-control tinymce"><?php echo set_value( \''.$sqlname.'\',$before->'.$sqlname.');?></textarea>'."\n";
+										$editdata.='</div>'."\n";
+										$editdata.='</div>'."\n";
+										}
+										if($fieldtype==3)
+										{
+										$editdata.='<div class=" form-group">'."\n";
+										$editdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+										$editdata.='<div class="col-sm-4">'."\n";
+										$editdata.='<?php echo form_dropdown("'.$sqlname.'",$'.$sqlname.',set_value(\''.$sqlname.'\',$before->'.$sqlname.'),"class=\'chzn-select form-control\'");?>'."\n";
+										$editdata.='</div>'."\n";
+										$editdata.='</div>'."\n";
+										}
+										if($fieldtype==5)
+										{
+										$editdata.='<div class=" form-group">'."\n";
+										$editdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+										$editdata.='<div class="col-sm-4">'."\n";
+										$editdata.='<?php echo form_dropdown("'.$sqlname.'",$'.$sqlname.',set_value(\''.$sqlname.'\',$before->'.$sqlname.'),"class=\'chzn-select form-control\' " multiple);?>'."\n";
+										$editdata.='</div>'."\n";
+										$editdata.='</div>'."\n";
+										}
+										
+										if($fieldtype==7)
+										{
+										$editdata.='<div class="form-group" style="display:none;">'."\n";
+										$editdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+										$editdata.='<div class="col-sm-4">'."\n";
+										$editdata.='<input type="text" id="normal-field" class="form-control" name="'.$sqlname.'" value=\'<?php echo set_value(\''.$sqlname.'\',$before->'.$sqlname.');?>\'>'."\n";
+										$editdata.='</div>'."\n";
+										$editdata.='</div>'."\n";
+										}
+					
+										if($fieldtype==8)
+										{
+										$editdata.='<div class="form-group">'."\n";
+										$editdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+										$editdata.='<div class="col-sm-4">'."\n";
+										$editdata.='<input type="email" id="normal-field" class="form-control" name="'.$sqlname.'" value=\'<?php echo set_value(\''.$sqlname.'\',$before->'.$sqlname.');?>\'>'."\n";
+										$editdata.='</div>'."\n";
+										$editdata.='</div>'."\n";
+										}
+										if($fieldtype==9)
+										{
+										$editdata.='<div class="form-group">'."\n";
+										$editdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+										$editdata.='<div class="col-sm-4">'."\n";
+										$editdata.='<input type="number" id="normal-field" class="form-control" name="'.$sqlname.'" value=\'<?php echo set_value(\''.$sqlname.'\',$before->'.$sqlname.');?>\'>'."\n";
+										$editdata.='</div>'."\n";
+										$editdata.='</div>'."\n";
+										}
+										if($fieldtype==11)
+										{
+										$editdata.='<div class="form-group">'."\n";
+										$editdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+										$editdata.='<div class="col-sm-4">'."\n";
+										$editdata.='<input type="date" id="normal-field" class="form-control" name="'.$sqlname.'" value=\'<?php echo set_value(\''.$sqlname.'\',$before->'.$sqlname.');?>\'>'."\n";
+										$editdata.='</div>'."\n";
+										$editdata.='</div>'."\n";
+										}
+					
+										if($fieldtype==10)
+										{
+										$editdata.='<div class=" form-group">'."\n";
+										$editdata.='<label class="col-sm-2 control-label" for="normal-field">'.$title.'</label>'."\n";
+										$editdata.='<div class="col-sm-4">'."\n";
+										$editdata.='<input type="file" id="normal-field" class="form-control" name="'.$sqlname.'" value=\'<?php echo set_value(\''.$sqlname.'\',$before->'.$sqlname.');?>\'>'."\n";
+										$editdata.='</div>'."\n";
+										$editdata.='</div>'."\n";
+										}
+									}
+//                                    $createdata.='<td>" + resultrow.'.$sqlname.' + "</td>';
+                        }
+            
+                                    $editdata.='<div class="form-group">'."\n";
+                                    $editdata.='<label class="col-sm-2 control-label" for="normal-field">&nbsp;</label>'."\n";
+                                    $editdata.='<div class="col-sm-4">'."\n";
+                                    $editdata.='<button type="submit" class="btn btn-primary">Save</button>'."\n";
+                                    $editdata.="<a href='<?php echo site_url(\"site/viewpage\"); ?>' class='btn btn-secondary'>Cancel</a>"."\n";
+                                    $editdata.='</div>'."\n";
+                                    $editdata.='</div>'."\n";
+            
+            $editdata.='</form>'."\n";
+            $editdata.='</div>'."\n";
+            $editdata.='</section>'."\n";
+              
+                          
+		$urlforeditpage=$_SERVER["SCRIPT_FILENAME"];
+        $urlforeditpage=substr($urlforeditpage,0,-9);
+        $urleditpage=$urlforeditpage.'admins/'.$databasename.'/application/views/backend/edit'.$tablename.'.php';
+        if ( ! write_file($urleditpage, $editdata))
+        {
+             echo 'Unable to write the file';
+        }
+        else
+        {
+             echo 'File written!';
+        }
+		 
+         
+       
+        
+    }
+        
+        
+//        echo $controller;
+           
+        $controller.=''."\n";
+        $controller.='}'."\n";
+        $controller.='?>'."\n";
+        
+		$urlforcontroller=$_SERVER["SCRIPT_FILENAME"];
+        $urlforcontroller=substr($urlforcontroller,0,-9);
+        $urlcontroller=$urlforcontroller.'admins/'.$databasename.'/application/controllers/site.php';
+        if ( ! write_file($urlcontroller, $controller))
+        {
+             echo 'Unable to write the file';
+        }
+        else
+        {
+             echo 'File written!';
+        }
+		 
+//        $afterinsertcontrollerdata=read_file($urlcontroller);
+//        $afterinsertcontrollerdata=substr($afterinsertcontrollerdata,0,-3);
+//            echo $afterinsertcontrollerdata;
+        
+          $alljson.='} ?>';
+        
+            $urlforjson=$_SERVER["SCRIPT_FILENAME"];
+            $urlforjson=substr($urlforjson,0,-9);
+            $urljson=$urlforjson.'admins/'.$databasename.'/application/controllers/json.php';
+        if ( ! write_file($urljson, $alljson))
+        {
+             echo 'Unable to write the file';
+        }
+        else
+        {
+             echo 'File written!';
+        }
     
-        // for git only    
-        //echo shell_exec("git clone https://github.com/avinashghare/createO.git");
-        //echo shell_exec("mv createO $databasename");
-        //echo shell_exec("mv $databasename admins");
-        
-        
             
 	}
     
