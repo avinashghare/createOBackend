@@ -24,7 +24,7 @@ class table_model extends CI_Model
     
     public function gettabledropdown()
 	{
-		$query=$this->db->query("SELECT `table`.`id` AS `id`,`table`.`tablename` AS `tablename`,`project`.`name` AS `projectname` FROM `table` LEFT OUTER JOIN `project` ON `project`.`id`=`table`.`project`  ORDER BY `id` ASC")->result();
+		$query=$this->db->query("SELECT `table`.`id` AS `id`,`table`.`tablename` AS `tablename`,`project`.`name` AS `projectname` FROM `table` LEFT OUTER JOIN `project` ON `project`.`id`=`table`.`project`  ORDER BY `id` DESC")->result();
 		$return=array(
 		);
 		foreach($query as $row)

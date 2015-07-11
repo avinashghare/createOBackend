@@ -42,7 +42,7 @@
                 {
                     resultrow.name="";
                 }
-                return "<tr><td>" + resultrow.id + "</td><td>" + resultrow.name + "</td><td>" + resultrow.email + "</td><td>" + resultrow.databasename + "</td><td>" + resultrow.databasepassword + "</td><td>" + resultrow.hostname + "</td><td>" + resultrow.userpassword + "</td><td>" + resultrow.mandrillid + "</td><td>" + resultrow.mandrillpassword + "</td><td><a class='btn btn-primary btn-xs' href='<?php echo site_url('site/editproject?id=');?>"+resultrow.id +"'><i class='icon-pencil'></i></a><a class='btn btn-danger btn-xs' href='<?php echo site_url('site/deleteproject?id='); ?>"+resultrow.id +"'><i class='icon-trash '></i></a></td><td><a class='btn btn-primary btn-xs' href='<?php echo site_url('site/executeproject1?id='); ?>"+resultrow.id +"'>Execute</a></td><tr>";
+                return "<tr><td>" + resultrow.id + "</td><td>" + resultrow.name + "</td><td>" + resultrow.email + "</td><td>" + resultrow.databasename + "</td><td>" + resultrow.databasepassword + "</td><td>" + resultrow.hostname + "</td><td>" + resultrow.userpassword + "</td><td>" + resultrow.mandrillid + "</td><td>" + resultrow.mandrillpassword + "</td><td><a class='btn btn-primary btn-xs' href='<?php echo site_url('site/editproject?id=');?>"+resultrow.id +"'><i class='icon-pencil'></i></a><a class='btn btn-danger btn-xs' href='<?php echo site_url('site/deleteproject?id='); ?>"+resultrow.id +"'><i class='icon-trash '></i></a></td><td><a class='btn btn-primary btn-xs' href='<?php echo site_url('site/executeproject?id='); ?>"+resultrow.id +"'>Execute</a></td><tr>";
             }
             generatejquery('<?php echo $base_url;?>');
         </script>

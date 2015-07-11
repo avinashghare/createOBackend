@@ -1851,16 +1851,16 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
         }
     
 //         for git only    
-        echo shell_exec("git clone https://github.com/avinashghare/createO.git");
-        echo shell_exec("mv createO $databasename");
-        echo shell_exec("mv $databasename admins");
+//        echo shell_exec("git clone https://github.com/avinashghare/createO.git");
+//        echo shell_exec("mv createO $databasename");
+//        echo shell_exec("mv $databasename admins");
         
         $this->executeproject1($projectid);
             
 	}
     
-	function executeproject1()
-//	function executeproject1($id)
+//	function executeproject1()
+	function executeproject1($id)
 	{
         
         
@@ -1868,7 +1868,7 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
 		$this->checkaccess($access);
         
         
-        $id=$this->input->get('id');
+//        $id=$this->input->get('id');
         
         $project=$this->db->query("SELECT * FROM `project` WHERE `id`='$id'")->row();
         $databasename=$project->name;
@@ -2416,20 +2416,21 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
             
              //views
             $viewdata="";
-            $viewdata.='<div class="row" style="padding:1% 0">'."\n";
-            $viewdata.='<div class="col-md-12">'."\n";
-           $viewdata.='<a class="btn btn-primary pull-right"  href="<?php echo site_url("site/create'.$tablename.'"); ?>"><i class="icon-plus"></i>Create </a> &nbsp; '."\n";  
+            $viewdata.='<div id="page-title">'."\n";
+            $viewdata.='<a class="btn btn-primary btn-labeled fa fa-plus margined pull-right" href="<?php echo site_url("site/createuser"); ?>">Create</a>'."\n";
+           $viewdata.='<h1 class="page-header text-overflow">'.$tablename.' Details </h1>'."\n";  
             $viewdata.='</div>'."\n"; 
-            $viewdata.='</div>'."\n"; 
+            
+            $viewdata.='<div id="page-content">'."\n"; 
             $viewdata.='<div class="row">'."\n";
 	$viewdata.='<div class="col-lg-12">'."\n";
-		$viewdata.='<section class="panel">'."\n";
-			$viewdata.='<header class="panel-heading">'."\n";
-                $viewdata.=$tablename.' Details'."\n";
-            $viewdata.='</header>'."\n";
-            $viewdata.='<div class="drawchintantable">'."\n";
+		$viewdata.='<div class="panel drawchintantable">'."\n";
             $viewdata.='<?php $this->chintantable->createsearch("'.$tablename.' List");?>'."\n";
-            $viewdata.='<table class="table table-striped table-hover" id="" cellpadding="0" cellspacing="0" >'."\n";
+            
+		$viewdata.='<div class="fixed-table-container">'."\n";
+		$viewdata.='<div class="fixed-table-body">'."\n";
+			
+            $viewdata.='<table class="table table-hover" id="" cellpadding="0" cellspacing="0">'."\n";
             $viewdata.='<thead>'."\n";
             $viewdata.='<tr>'."\n";
             $string="";
@@ -2449,9 +2450,20 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
             $viewdata.='<tbody>'."\n";
             $viewdata.='</tbody>'."\n";
             $viewdata.='</table>'."\n";
-            $viewdata.='<?php $this->chintantable->createpagination();?>'."\n";
             $viewdata.='</div>'."\n";
-            $viewdata.='</section>'."\n";
+            
+            $viewdata.='<div class="fixed-table-pagination" style="display: block;">'."\n";
+            $viewdata.='<div class="pull-left pagination-detail">'."\n";
+            
+            $viewdata.='<?php $this->chintantable->createpagination();?>'."\n";
+            
+            $viewdata.='</div>'."\n";
+            $viewdata.='</div>'."\n";
+            
+            $viewdata.='</div>'."\n";
+            $viewdata.='</div>'."\n";
+            $viewdata.='</div>'."\n";
+            $viewdata.='</div>'."\n";
             
             $viewdata.='<script>'."\n";
             $viewdata.='function drawtable(resultrow) {'."\n";
@@ -2478,7 +2490,8 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
 //                                        
 //                                    }
                         }
-            $viewdata.="<td><a class='btn btn-primary btn-xs' href='<?php echo site_url('site/edit".$tablename."?id=');?>\"+resultrow.".$endtext."+\"'><i class='icon-pencil'></i></a><a class='btn btn-danger btn-xs' href='<?php echo site_url('site/delete".$tablename."?id='); ?>\"+resultrow.".$endtext."+\"'><i class='icon-trash '></i></a></td>";
+              $confirm='return confirm(\"Are you sure you want to delete?\")';
+            $viewdata.="<td><a class='btn btn-primary btn-xs' href='<?php echo site_url('site/edit".$tablename."?id=');?>\"+resultrow.".$endtext."+\"'><i class='icon-pencil'></i></a><a class='btn btn-danger btn-xs' onclick=$confirm href='<?php echo site_url('site/delete".$tablename."?id='); ?>\"+resultrow.".$endtext."+\"'><i class='icon-trash '></i></a></td>";
             
 //            $viewdata.=endtext();
             $viewdata.='</tr>';
@@ -2506,20 +2519,20 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
             
             //createpage
             
-            
             $createdata="";
-            $createdata.='<div class="row" style="padding:1% 0">'."\n";
-            $createdata.='<div class="col-md-12">'."\n";
-            $createdata.='<div class="pull-right">'."\n";
+            $createdata.='<div id="page-title">'."\n";
+            $createdata.='<a href="<?php echo site_url("site/view'.$tablename.'"); ?>" class="btn btn-primary btn-labeled fa fa-arrow-left margined pull-right">Back</a>'."\n";
+            $createdata.='<h1 class="page-header text-overflow">'.$tablename.' Details </h1>'."\n";
             $createdata.='</div>'."\n";
-            $createdata.='</div>'."\n";
-            $createdata.='</div>'."\n";
+            
+            $createdata.='<div id="page-content">'."\n";
             $createdata.='<div class="row">'."\n";
             $createdata.='<div class="col-lg-12">'."\n";
             $createdata.='<section class="panel">'."\n";
-            $createdata.='<header class="panel-heading">'."\n";
-            $createdata.=$tablename.' Details'."\n";
-            $createdata.='</header>'."\n";
+            $createdata.='<div class="panel-heading">'."\n";
+            $createdata.='<h3 class="panel-title">'."\n";
+            $createdata.='Create '.$tablename.' </h3>'."\n";
+            $createdata.='</div>'."\n";
             $createdata.='<div class="panel-body">'."\n";
             $createdata.="<form class='form-horizontal tasi-form' method='post' action='<?php echo site_url(\"site/create".$tablename."submit\");?>' enctype= 'multipart/form-data'>"."\n";
             $createdata.='<div class="panel-body">'."\n";
@@ -2635,13 +2648,14 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
                                     $createdata.='<label class="col-sm-2 control-label" for="normal-field">&nbsp;</label>'."\n";
                                     $createdata.='<div class="col-sm-4">'."\n";
                                     $createdata.='<button type="submit" class="btn btn-primary">Save</button>'."\n";
-                                    $createdata.='<a href="<?php echo site_url("site/viewpage"); ?>" class="btn btn-secondary">Cancel</a>'."\n";
+                                    $createdata.='<a href="<?php echo site_url("site/view'.$tablename.'"); ?>" class="btn btn-secondary">Cancel</a>'."\n";
                                     $createdata.='</div>'."\n";
                                     $createdata.='</div>'."\n";
             
             $createdata.='</form>'."\n";
             $createdata.='</div>'."\n";
             $createdata.='</section>'."\n";
+            $createdata.='</div>'."\n";
             $createdata.='</div>'."\n";
             $createdata.='</div>'."\n";
             
@@ -2664,7 +2678,7 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
             $editdata='';
             $editdata.='<section class="panel">'."\n";
             $editdata.='<header class="panel-heading">'."\n";
-            $editdata.=$tablename.' Details'."\n";
+            $editdata.='<h3 class="panel-title">'.$tablename.' Details </h3>'."\n";
             $editdata.='</header>'."\n";
             $editdata.='<div class="panel-body">'."\n";
             $editdata.="<form class='form-horizontal tasi-form' method='post' action='<?php echo site_url(\"site/edit".$tablename."submit\");?>' enctype= 'multipart/form-data'>"."\n";
@@ -2780,7 +2794,7 @@ LEFT OUTER JOIN `fieldtype` ON `field`.`type`=`fieldtype`.`id` WHERE `field`.`ta
                                     $editdata.='<label class="col-sm-2 control-label" for="normal-field">&nbsp;</label>'."\n";
                                     $editdata.='<div class="col-sm-4">'."\n";
                                     $editdata.='<button type="submit" class="btn btn-primary">Save</button>'."\n";
-                                    $editdata.="<a href='<?php echo site_url(\"site/viewpage\"); ?>' class='btn btn-secondary'>Cancel</a>"."\n";
+                                    $editdata.="<a href='<?php echo site_url(\"site/view".$tablename."\"); ?>' class='btn btn-secondary'>Cancel</a>"."\n";
                                     $editdata.='</div>'."\n";
                                     $editdata.='</div>'."\n";
             
